@@ -1,0 +1,97 @@
+CREATE TABLE company (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(256) NOT NULL,
+    auth_url   VARCHAR(256)
+);
+
+
+insert into company (name, auth_url) values ('First', 'http://192.168.68.105:8080/hello');
+insert into company (name, auth_url) values ('Second', 'http://10.10.156.21:8080/hello');
+
+
+
+
+CREATE TABLE auth_attribute (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    company_id INTEGER NOT NULL REFERENCES company(id) ON DELETE CASCADE,
+    name VARCHAR(256) NOT NULL,
+    case_sensitive BOOLEAN NOT NULL DEFAULT FALSE,
+    auth_increment INTEGER NOT NULL DEFAULT 0,
+    auth_penalty INTEGER NOT NULL DEFAULT 0
+);
+
+
+INSERT INTO auth_attribute (company_id, name, case_sensitive, auth_increment, auth_penalty)
+VALUES
+    (1, 'username', FALSE, 10, 0),
+    (1, 'Password', TRUE, 50, 0),
+    (1, 'account_number', TRUE, 40, 0),
+    (1, 'pin', FALSE, 10, 0),
+    (1, 'zipcode', FALSE, 20, 5),
+    (1, 'phone_number', FALSE, 30, 5),
+    (1, 'card_number', FALSE, 20, 5),
+    (1, 'expiry', FALSE, 20, 5),
+    (1, 'cvv', FALSE, 20, 5),
+    (1, 'ssn', FALSE, 20, 5),
+    (1, 'email', FALSE, 20, 5);
+
+
+CREATE TABLE bank_operation (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    company_id INTEGER NOT NULL REFERENCES company(id) ON DELETE CASCADE,
+    name VARCHAR(256) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    min_auth_level INTEGER NOT NULL DEFAULT 0
+);
+
+
+
+INSERT INTO bank_operation (company_id, name, enabled, min_auth_level) VALUES
+    (1, 'check_balance', TRUE, 50),
+    (1, 'transfer_money', TRUE, 50),
+    (1, 'deposit', TRUE, 50),
+    (1, 'withdraw', TRUE, 50),
+    (1, 'open_account', TRUE, 50),
+    (1, 'close_account', TRUE, 50),
+    (1, 'pay_bill', TRUE, 50),
+    (1, 'schedule_payment', TRUE, 50),
+    (1, 'stop_payment', TRUE, 50),
+    (1, 'locate_branch', TRUE, 50),
+    (1, 'report_fraud', TRUE, 50),
+    (1, 'currency_exchange', TRUE, 50),
+    (1, 'request_statement', TRUE, 50),
+    (1, 'loan_inquiry', TRUE, 50),
+    (1, 'update_contact', TRUE, 50),
+    (1, 'unknown', TRUE, 50)
+;
+
+
+
+
+CREATE ROLE "authuser" WITH
+	LOGIN
+	NOSUPERUSER
+	NOCREATEDB
+	NOCREATEROLE
+	INHERIT
+	NOREPLICATION
+	CONNECTION LIMIT -1
+	PASSWORD 'xxxxxx';   // or is it authagent ??
+
+
+GRANT USAGE ON SCHEMA public TO authuser;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO authuser;
+
+
+CREATE TABLE company_unique_criteria (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    company_id INTEGER NOT NULL REFERENCES company(id) ON DELETE CASCADE,
+    name VARCHAR(256) NOT NULL,
+    criteria VARCHAR(256) NOT NULL
+);
+
+insert into company_unique_criteria (company_id, name, criteria) values
+    (1, 'Normal', 'username and password'),
+    (2, 'card based', 'debit card number and pin');
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO authuser;
